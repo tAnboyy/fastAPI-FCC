@@ -6,7 +6,7 @@ from fastapi import FastAPI, Body, Response, status, HTTPException
 from random import randrange
 
 from pydantic import BaseModel
-import psycopg2
+import psycopg2 #standard python library(not ORM) to talk to db using sql queries
 from psycopg2.extras import RealDictCursor
 import time
 
@@ -105,10 +105,14 @@ def create_post(post: Post):
 
 
 @app.get("/posts/{id}")
-def get_post(id: int, response: Response):
+def get_post(id: int):
     # print(id) #id extracted from path parameter is by default a string
     # post = find_post(int(id))
-    post = find_post(id)
+    cursor.execute("""SELECT * from posts WHERE id = %s""", (str(id), ))
+    post = cursor.fetchone()
+    # print(post)
+
+    # post = find_post(id)
     if not post:
         # response.status_code = status.HTTP_404_NOT_FOUND
         # return {"detail":f"post with id {id} not found"}
@@ -122,24 +126,32 @@ def delete_post(id: int):
     # remove_post(id)
     # return {"data": remove_post(id)}
 
-    index = find_post_index(id)
+    cursor.execute("""DELETE from posts WHERE id = %s RETURNING *""", (str(id), ))
+    deleted_post = cursor.fetchone()
+    conn.commit()
+    # index = find_post_index(id)
 
-    if index == None:
+    if deleted_post == None:
         raise HTTPException(status.HTTP_404_NOT_FOUND,
                             f"post with id {id} does not exist")
 
-    my_posts.pop(index)
+    # my_posts.pop(index)
     # return {'message': f"post {id} was successfully deleted"}
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+
 @app.patch("/posts/{id}")
 def update_post_title(id: int, post: PostTitlePatch):
-    print(post)
-
+    # print(post)
+    
     post = post.dict()
-
     npost = find_post(id)
+
+    if npost == None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND,
+                            f"post with id {id} does not exist")
+
     npost["title"] = post['title']
 
     return {"data": my_posts}
@@ -147,20 +159,25 @@ def update_post_title(id: int, post: PostTitlePatch):
 
 @app.put("/posts/{id}")
 def update_post(id: int, post: Post):
-    print(post)
+    # print(post)
 
-    index = find_post_index(id)
+    # index = find_post_index(id)
 
-    if index == None:
+    cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s where id = %s RETURNING *""", (post.title, post.content, post.published, str(id)))
+    updated_post = cursor.fetchone()
+    conn.commit()
+
+    if updated_post == None:
         raise HTTPException(status.HTTP_404_NOT_FOUND,
                             f"post with id {id} does not exist")
 
-    post_dict = post.dict()
-    post_dict['id'] = id
 
-    my_posts[index] = post_dict
 
-    return {"message": my_posts}
+    # post_dict = post.dict()
+    # post_dict['id'] = id
+    # my_posts[index] = post_dict
+
+    return {"message": updated_post}
 
 
 # docs/redoc
