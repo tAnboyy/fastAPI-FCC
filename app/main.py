@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import FastAPI, Body, Response, status, HTTPException
 # from fastapi.params import Body
 from random import randrange
-
+from . import schemas
 from pydantic import BaseModel
 import psycopg2 #standard python library(not ORM) to talk to db using sql queries
 from psycopg2.extras import RealDictCursor
@@ -21,14 +21,6 @@ app = FastAPI()
 
 # pydantic schema
 # performs automatic validation
-
-
-class Post(BaseModel):
-    title: str
-    content: str
-    published: bool = True  # defaults to true ie optional field for user
-    # rating: Optional[int] = None
-
 
 while True:
     try:
@@ -88,7 +80,7 @@ def get_posts():
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
 # def create_posts(payload: dict = Body(...)):
-def create_post(post: Post):
+def create_post(post: schemas.Post):
     # print(payload)
     # print(new_post.rating)
     # print(post.dict())  # converts pydantic model to dictionary
@@ -158,7 +150,7 @@ def update_post_title(id: int, post: PostTitlePatch):
 
 
 @app.put("/posts/{id}")
-def update_post(id: int, post: Post):
+def update_post(id: int, post: schemas.Post):
     # print(post)
 
     # index = find_post_index(id)
