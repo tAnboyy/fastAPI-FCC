@@ -6,7 +6,6 @@ class Post(BaseModel):
     published: bool = True  # defaults to true ie optional field for user
     # rating: Optional[int] = None
 
-
 # class CreatePost(BaseModel):
 #     title: str
 #     content: str

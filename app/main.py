@@ -1,14 +1,18 @@
 import enum
 from genericpath import exists
 from typing import Optional
-from fastapi import FastAPI, Body, Response, status, HTTPException
+from fastapi import FastAPI, Body, Response, status, HTTPException, Depends
 # from fastapi.params import Body
 from random import randrange
-from . import schemas
+from . import schemas, models
 from pydantic import BaseModel
 import psycopg2 #standard python library(not ORM) to talk to db using sql queries
 from psycopg2.extras import RealDictCursor
 import time
+from .database import engine, get_db
+from sqlalchemy.orm import Session
+
+models.Base.metadata.create_all(bind=engine)  # creates tables in postgres
 
 # py -3 -m venv venv #create virtual environment
 # uvicorn main:app --reload
@@ -63,7 +67,7 @@ def find_post_index(id):
         if p["id"] == id:
             return i
 
-
+# 'path operations' ie pythonic api endpoints 
 @app.get("/login")
 def login_user():
     # return {"Hey": "World"}
@@ -80,7 +84,7 @@ def get_posts():
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
 # def create_posts(payload: dict = Body(...)):
-def create_post(post: schemas.Post):
+def create_post(post: schemas.PostCreate):
     # print(payload)
     # print(new_post.rating)
     # print(post.dict())  # converts pydantic model to dictionary
@@ -150,7 +154,7 @@ def update_post_title(id: int, post: PostTitlePatch):
 
 
 @app.put("/posts/{id}")
-def update_post(id: int, post: schemas.Post):
+def update_post(id: int, post: schemas.PostCreate):
     # print(post)
 
     # index = find_post_index(id)
@@ -170,6 +174,10 @@ def update_post(id: int, post: schemas.Post):
     # my_posts[index] = post_dict
 
     return {"message": updated_post}
+
+@app.get('/sqlalchemy')
+def test_posts(db: Session = Depends(get_db)):
+    return {"status": "success"}
 
 
 # docs/redoc

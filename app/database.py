@@ -8,3 +8,12 @@ engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+
+# above code is mostly just boilerplate
+
+def get_db():
+    db = SessionLocal() # SessionLocal object responsible for starting a session to the database 
+    try:
+        yield db
+    finally:
+        db.close()
