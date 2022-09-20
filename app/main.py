@@ -183,3 +183,5 @@ def update_post(id: int, post: Post):
 # docs/redoc
 
 # uvicorn app.main:app --reload
+
+# pip freeze, list all pip installed packages
